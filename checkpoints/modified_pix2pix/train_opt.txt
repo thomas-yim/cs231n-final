@@ -4,8 +4,8 @@
           checkpoints_dir: ./checkpoints                 
            continue_train: False                         
                 crop_size: 256                           
-                 dataroot: ./data/pix2pix/AB             	[default: None]
-             dataset_mode: aligned                       
+                 dataroot: ./data/stacked_pix2pix        	[default: None]
+             dataset_mode: stacked                       	[default: aligned]
                 direction: AtoB                          
               display_env: main                          
              display_freq: 400                           
@@ -20,7 +20,7 @@
                   gpu_ids: -1                            	[default: 0]
                 init_gain: 0.02                          
                 init_type: normal                        
-                 input_nc: 3                             
+                 input_nc: 6                             	[default: 3]
                   isTrain: True                          	[default: None]
                 lambda_L1: 100.0                         
                 load_iter: 0                             	[default: 0]
@@ -29,7 +29,7 @@
            lr_decay_iters: 50                            
                 lr_policy: linear                        
          max_dataset_size: inf                           
-                    model: pix2pix_depth                 	[default: cycle_gan]
+                    model: pix2pix                       	[default: cycle_gan]
                  n_epochs: 100                           
            n_epochs_decay: 100                           
                n_layers_D: 3                             

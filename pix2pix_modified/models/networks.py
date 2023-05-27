@@ -154,7 +154,8 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'unet_128':
         net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     if netG == 'unet_256':
-        #net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+        net = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
+    elif netG=="extended_unet_256":
         net = ExtendedUnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
@@ -456,7 +457,6 @@ class ExtendedUnetGenerator(nn.Module):
         """
         super(ExtendedUnetGenerator, self).__init__()
         unet = UnetGeneratorModified(input_nc, output_nc, num_downs, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
-        print("modified unet")
         #print(unet)
         final_conv = nn.Conv2d(output_nc+3, 3, 3, 1, 1, bias=True)
         self.model = nn.Sequential(*([unet] + [final_conv]))

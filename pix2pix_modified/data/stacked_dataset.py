@@ -2,6 +2,7 @@ import os
 from data.base_dataset import BaseDataset, get_transform
 from data.image_folder import make_dataset
 from PIL import Image
+import torch
 import random
 
 
@@ -24,10 +25,10 @@ class StackedDataset(BaseDataset):
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseDataset.__init__(self, opt)
-        self.dir_A = os.path.join(opt.dataroot, opt.phase + 'A')  # create a path '/path/to/data/trainA'
-        self.dir_A_depth = os.path.join(opt.dataroot, opt.phase + 'A_depth')
-        self.dir_A_normal = os.path.join(opt.dataroot, opt.phase + 'A_normal')
-        self.dir_B = os.path.join(opt.dataroot, opt.phase + 'B')  # create a path '/path/to/data/trainB'
+        self.dir_A = os.path.join(opt.dataroot + "/EEVEE", opt.phase)  # create a path '/path/to/data/trainA'
+        self.dir_A_depth = os.path.join(opt.dataroot + '/DEPTH', opt.phase)
+        self.dir_A_normal = os.path.join(opt.dataroot + '/NORMAL', opt.phase)
+        self.dir_B = os.path.join(opt.dataroot + '/CYCLES', opt.phase)  # create a path '/path/to/data/trainB'
 
         self.A_paths = sorted(make_dataset(self.dir_A, opt.max_dataset_size))   # load images from '/path/to/data/trainA'
         self.A_normal_paths = sorted(make_dataset(self.dir_A_normal, opt.max_dataset_size))   # load images from '/path/to/data/trainA'
@@ -36,6 +37,9 @@ class StackedDataset(BaseDataset):
         self.A_size = len(self.A_paths)  # get the size of dataset A
         assert len(self.A_paths) == len(self.A_normal_paths) and len(self.A_paths) == len(self.A_depth_paths)
         self.B_size = len(self.B_paths)  # get the size of dataset B
+
+        self.transform_A = get_transform(self.opt)
+        self.transform_B = get_transform(self.opt)
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -53,12 +57,17 @@ class StackedDataset(BaseDataset):
         A_depth_path = self.A_depth_paths[index % self.A_size]  # make sure index is within then range
         A_normal_path = self.A_normal_paths[index % self.A_size]  # make sure index is within then range
         B_path = self.B_paths[index % self.B_size]
-        A_img = Image.open(A_path)
-        A_depth_img = Image.open(A_depth_path)
-        A_normal_img = Image.open(A_normal_path)
-        B_img = Image.open(B_path).convert('RGB')
 
-        return {'A': A_img, 'B': B_img, 'A_paths': A_path, 'B_paths': B_path}
+        # A = self.transform_A(A_img)
+        # B = self.transform_B(B_img)
+        
+        A_img = self.transform_A(Image.open(A_path)) # already RBG
+        # A_depth_img = self.transform_A(Image.open(A_depth_path).convert("L"))
+        A_normal_img = self.transform_A(Image.open(A_normal_path).convert("RGB"))
+        A_stacked = torch.cat((A_img, A_normal_img), dim=0)
+        B_img = self.transform_A(Image.open(B_path))
+
+        return {'A': A_stacked, 'B': B_img, 'A_paths': A_path, 'B_paths': B_path}
 
     def __len__(self):
         """Return the total number of images in the dataset.

@@ -11,10 +11,10 @@ val_size = 2000
 test_size = 2000
 
 # Set the paths to your train, validation, and test set folders
-root = "data/pix2pix"
+root = "data/stacked_pix2pix"
 
 # Loop through each class (eevee and cycles) and split the data into train, validation, and test sets
-for class_name in ["eevee", "cycles"]:
+for class_name in ["eevee", "cycles", "depth", "normal"]:
     # Get the list of files in the class folder
     class_files = sorted(os.listdir(os.path.join(data_path, class_name)))
 
