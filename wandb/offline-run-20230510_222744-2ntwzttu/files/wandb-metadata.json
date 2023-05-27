@@ -1,0 +1,28 @@
+{
+    "os": "macOS-13.2-arm64-arm-64bit",
+    "python": "3.8.16",
+    "heartbeatAt": "2023-05-11T05:27:44.632126",
+    "startedAt": "2023-05-11T05:27:44.250637",
+    "docker": null,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [
+        "--dataroot",
+        "./data/pix2pix/AB",
+        "--direction",
+        "AtoB",
+        "--model",
+        "pix2pix",
+        "--name",
+        "ray_pix2pix",
+        "--use_wandb",
+        "--gpu_ids",
+        "-1"
+    ],
+    "state": "running",
+    "program": "pytorch-CycleGAN-and-pix2pix/test.py",
+    "codePath": "pytorch-CycleGAN-and-pix2pix/test.py",
+    "host": "DN0a1f4d98.SUNet",
+    "username": "thomasyim",
+    "executable": "/Users/thomasyim/opt/anaconda3/envs/ray_generator/bin/python"
+}
