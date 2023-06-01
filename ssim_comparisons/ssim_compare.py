@@ -6,26 +6,33 @@ import numpy as np
 import math
 from PIL import Image
 import cv2
+from pathlib import Path
+import re
 
 SIZE = 256
 USER = "Caroline"
 if USER == "Caroline":
     PATH_TO_RESULTS = "/Users/carolinecahilly/Desktop/results/local_results/ray_pix2pix/test_latest/images/"
+    OUTPUT_FOLDER = "images/"
 
-def gaussian(window_size, sigma):
+WINDOW_SIZE = 11
+SIGMA = 1.5
+C = 3
+
+def gaussian(window_size=WINDOW_SIZE, sigma=SIGMA):
     """
     Generates a list of Tensor values drawn from a gaussian distribution with standard
     diviation = sigma and sum of all elements = 1.
 
     Length of list = window_size
     """    
-    gauss =  torch.Tensor([math.exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
+    gauss = torch.Tensor([math.exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
     return gauss/gauss.sum()
 
-def create_window(window_size, channel=1):
+def create_window(window_size=WINDOW_SIZE, channel=C):
 
     # Generate an 1D tensor containing values sampled from a gaussian distribution
-    _1d_window = gaussian(window_size=window_size, sigma=1.5).unsqueeze(1)
+    _1d_window = gaussian(window_size=window_size).unsqueeze(1)
     
     # Converting to 2D  
     _2d_window = _1d_window.mm(_1d_window.t()).float().unsqueeze(0).unsqueeze(0)
@@ -34,7 +41,7 @@ def create_window(window_size, channel=1):
 
     return window
 
-def ssim(img1, img2, val_range, window_size=11, window=None, size_average=True, full=False):
+def ssim(img1, img2, val_range, window_size=WINDOW_SIZE, window=None, size_average=True, full=False):
 
     L = val_range # L is the dynamic range of the pixel values (255 for 8-bit grayscale images),
 
@@ -47,7 +54,7 @@ def ssim(img1, img2, val_range, window_size=11, window=None, size_average=True, 
 
     # if window is not provided, init one
     if window is None: 
-        real_size = min(window_size, height, width) # window should be atleast 11x11 
+        real_size = min(window_size, height, width) # window should be at least WINDOW_SIZE x WINDOW_SIZE 
         window = create_window(real_size, channel=channels).to(img1.device)
     
     # calculating the mu parameter (locally) for both images using a gaussian filter 
@@ -93,7 +100,7 @@ def load_images(x):
     return np.asarray(Image.open(x).resize((SIZE, SIZE)))
 
 def tensorify(x):
-    return torch.Tensor(x.transpose((2, 0, 1))).unsqueeze(0).float().div(255.0)
+    return torch.Tensor(x.transpose((2, 0, 1)).copy()).unsqueeze(0).float().div(255.0)
 
 # save imgs 
 def save_imgs(x, p, transpose=True, resize=True):
@@ -101,57 +108,82 @@ def save_imgs(x, p, transpose=True, resize=True):
         x=cv2.resize(x, (SIZE, SIZE))
     if transpose:
         x_transpose = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
-        im = Image.fromarray(x_transpose)
-        # print(x_transpose, x_transpose.shape)
-        im.save(p)
+        norm = cv2.normalize(x_transpose, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        Image.fromarray(norm).save(p)
     else:
-        Image.fromarray(x).save(p)
+        norm = np.zeros_like(x_transpose)
+        norm = cv2.normalize(x_transpose, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        Image.fromarray(norm).save(p)
 
 def main():
-    gauss_dis = gaussian(11, 1.5)
-    print("Distribution: ", gauss_dis)
-    print("Sum of Gauss Distribution:", torch.sum(gauss_dis))
+    # gauss_dis = gaussian()
+    # print("Distribution: ", gauss_dis)
+    # print("Sum of Gauss Distribution:", torch.sum(gauss_dis))
 
-    window = create_window(11, 3)
-    print("Shape of gaussian window:", window.shape)
+    # window = create_window()
+    # print("Shape of gaussian window:", window.shape)
 
-    # The true reference Image 
-    img1 = load_images(PATH_TO_RESULTS + "mug_82_000_real_B.png")
+    mug_views = set()
+    for item in Path(PATH_TO_RESULTS).iterdir():
+        # Use regular expression to match the desired substring
+        match = re.search(r"(.*_)\w+_", str(item.relative_to(PATH_TO_RESULTS)))
 
-    # The False image
-    img2 = load_images(PATH_TO_RESULTS + "mug_82_000_fake_B.png")
+        if match:
+            result = match.group(1)
+        
+        mug_views.add(result)
+    
+    scores = dict()
+    avg_true_vs_false = 0
+    avg_true_vs_noised = 0
+    avg_true_vs_true = 0
+    for view in mug_views:
+        # The true reference Image 
+        img1 = load_images(PATH_TO_RESULTS + view + "real_B.png")
 
-    # The noised true image
-    noise = np.random.randint(0, 255, (SIZE, SIZE, 3)).astype(np.float32)
-    noisy_img_unnormalized = img1 + noise 
-    noisy_img = np.zeros_like(noisy_img_unnormalized, dtype=np.uint8)
-    cv2.normalize(noisy_img_unnormalized, noisy_img, 0, 255, cv2.NORM_MINMAX)
-    # print(noisy_img.shape, sum(noisy_img > 255))
+        # The False image
+        img2 = load_images(PATH_TO_RESULTS + view + "fake_B.png")
 
-    print("True Image\n")
-    save_imgs(img1, "true_img.png")
+        # The noised true image
+        noise = np.random.randint(0, 255, (SIZE, SIZE, 3)).astype(np.float32)
+        noisy_img = img1 + noise
 
-    print("\nFalse Image\n")
-    save_imgs(img2, "false_img.png")
+        save_imgs(img1, OUTPUT_FOLDER + view + "true_img.png")
+        save_imgs(img2, OUTPUT_FOLDER + view + "false_img.png")
+        save_imgs(noisy_img, OUTPUT_FOLDER + view + "noised_img.png")
 
-    print("\nNoised True Image\n")
-    save_imgs(noisy_img, "noised_img.png")
+        # Check SSIM score of True image vs False Image
+        _img1 = tensorify(img1)
+        _img2 = tensorify(img2)
+        true_vs_false = ssim(_img1, _img2, val_range=255)
+        # print("True vs False Image SSIM Score:", true_vs_false)
+        scores[view + "true_vs_false"] = true_vs_false
+        avg_true_vs_false += true_vs_false
 
-    # Check SSIM score of True image vs False Image
-    _img1 = tensorify(img1)
-    _img2 = tensorify(img2)
-    true_vs_false = ssim(_img1, _img2, val_range=255)
-    print("True vs False Image SSIM Score:", true_vs_false)
+        # Check SSIM score of True image vs Noised_true Image
+        _img1 = tensorify(img1)
+        _img2 = tensorify(noisy_img)
+        true_vs_false = ssim(_img1, _img2, val_range=255)
+        # print("True vs Noisy True Image SSIM Score:", true_vs_false)
+        scores[view + "true_vs_noised"] = true_vs_false
+        avg_true_vs_noised += true_vs_false
 
-    # Check SSIM score of True image vs Noised_true Image
-    _img1 = tensorify(img1)
-    _img2 = tensorify(noisy_img)
-    true_vs_false = ssim(_img1, _img2, val_range=255)
-    print("True vs Noisy True Image SSIM Score:", true_vs_false)
+        # Check SSIM score of True image vs True Image
+        _img1 = tensorify(img1)
+        true_vs_false = ssim(_img1, _img1, val_range=255)
+        # print("True vs True Image SSIM Score:", true_vs_false)
+        scores[view + "true_vs_true"] = true_vs_false
+        avg_true_vs_true += true_vs_false
 
-    # Check SSIM score of True image vs True Image
-    _img1 = tensorify(img1)
-    true_vs_false = ssim(_img1, _img1, val_range=255)
-    print("True vs True Image SSIM Score:", true_vs_false)
+    avg_true_vs_false /= len(mug_views)
+    avg_true_vs_noised /= len(mug_views)
+    avg_true_vs_true /= len(mug_views)
+
+    print("Window_size: ", str(WINDOW_SIZE))
+    print("Sigma: ", str(SIGMA))
+    print("The average ssim score for true vs. false was: " + str(round(avg_true_vs_false.item(), 3)))
+    print("The average ssim score for true vs. noised was: " + str(round(avg_true_vs_noised.item(), 3)))
+    print("The average ssim score for true vs. true was: " + str(round(avg_true_vs_true.item(), 3)))
+
 
 main()
