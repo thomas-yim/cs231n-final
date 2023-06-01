@@ -19,6 +19,7 @@ if len(sys.argv) > 1:
 else:
     DATASET = "local_results"
     # DATASET = "stacked_depth_full"
+    # DATASET = "milestone_results"
     # DATASET = "milestone_model_train"
 
 USER = "Caroline"
@@ -150,7 +151,7 @@ def main():
         if not os.path.exists(OUTPUT_FOLDER):
             os.makedirs(OUTPUT_FOLDER)
 
-    with open(OUTPUT_FOLDER + "complete_results.txt", "w") as file:
+    with open(OUTPUT_FOLDER + "complete_" + DATASET + "_results.txt", "w") as file:
         # Redirect the output to the file
         print("SSIM", file=file)
         print("Window_size: ", str(WINDOW_SIZE), file=file)
