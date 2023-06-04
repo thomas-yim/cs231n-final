@@ -3,6 +3,9 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
+import matplotlib.pyplot as plt
+from util import util
+import ntpath
 
 
 ###############################################################################
@@ -459,12 +462,15 @@ class ExtendedUnetGenerator(nn.Module):
         unet = UnetGeneratorModified(input_nc, output_nc, num_downs, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
         #print(unet)
         final_conv = nn.Conv2d(output_nc+3, 3, 3, 1, 1, bias=True)
+        print(output_nc)
         self.model = nn.Sequential(*([unet] + [final_conv]))
         #print(self.model)
 
     def forward(self, input):
         """Standard forward"""
-        return self.model(input)
+        out = self.model(input)
+        #util.save_image(util.tensor2im(out), ntpath.basename("forward_pass_image.png"))
+        return out
     
 class UnetGeneratorModified(nn.Module):
     """Create a Unet-based generator"""
@@ -526,7 +532,9 @@ class UnetGenerator(nn.Module):
 
     def forward(self, input):
         """Standard forward"""
-        return self.model(input)
+        out = self.model(input)
+        #util.save_image(util.tensor2im(out), ntpath.basename("forward_pass_image.png"))
+        return out
 
 
 class UnetSkipConnectionBlock(nn.Module):

@@ -23,12 +23,14 @@ def is_image_file(filename):
 def make_dataset(dir, max_dataset_size=float("inf")):
     images = []
     assert os.path.isdir(dir), '%s is not a valid directory' % dir
+    excluded_mugs = ["002", "020", "050", "078", "088", "099", "110", "115", "117"]
 
     for root, _, fnames in sorted(os.walk(dir)):
         for fname in fnames:
             if is_image_file(fname):
                 path = os.path.join(root, fname)
-                images.append(path)
+                if path.split("_")[-2] not in excluded_mugs:
+                    images.append(path)
     return images[:min(max_dataset_size, len(images))]
 
 

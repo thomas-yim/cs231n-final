@@ -38,8 +38,8 @@ class StackedDataset(BaseDataset):
         assert len(self.A_paths) == len(self.A_normal_paths) and len(self.A_paths) == len(self.A_depth_paths)
         self.B_size = len(self.B_paths)  # get the size of dataset B
 
-        self.transform_A = get_transform(self.opt)
-        self.transform_B = get_transform(self.opt)
+        self.transform = get_transform(self.opt)
+        self.transform_depth = get_transform(self.opt, grayscale=True)
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -61,11 +61,12 @@ class StackedDataset(BaseDataset):
         # A = self.transform_A(A_img)
         # B = self.transform_B(B_img)
         
-        A_img = self.transform_A(Image.open(A_path)) # already RBG
-        # A_depth_img = self.transform_A(Image.open(A_depth_path).convert("L"))
-        A_normal_img = self.transform_A(Image.open(A_normal_path).convert("RGB"))
-        A_stacked = torch.cat((A_img, A_normal_img), dim=0)
-        B_img = self.transform_A(Image.open(B_path))
+        A_img = self.transform(Image.open(A_path)) # already RBG
+        A_depth_img = self.transform_depth(Image.open(A_depth_path).convert("L"))
+        A_normal_img = self.transform(Image.open(A_normal_path).convert("RGB"))
+
+        A_stacked = torch.cat((A_img, A_depth_img), dim=0)
+        B_img = self.transform(Image.open(B_path))
 
         return {'A': A_stacked, 'B': B_img, 'A_paths': A_path, 'B_paths': B_path}
 
