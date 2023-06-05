@@ -51,8 +51,8 @@ def main():
     # Plot the loss function
     plt.plot(x_values, g_l1_values)
     plt.xlabel('Iterations')
-    plt.ylabel('G_L1 Training Loss')
-    plt.title('G_L1 Training Loss for ' + str(MODEL) + " Model")
+    plt.ylabel('L1 Training Loss')
+    plt.title('L1 Training Loss for ' + str(MODEL) + " Model")
     # plt.show()
 
     plt.savefig(OUT_PATH + str(MODEL) + '_plot.png', dpi=300)
