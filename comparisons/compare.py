@@ -45,11 +45,11 @@ SAVE_IMAGES = False
 def load_images(x):
     return np.asarray(Image.open(x).resize((SIZE, SIZE)))
 
-def psnr_wrapper(im1, im2):
-    if np.array_equal(im1, im2):
-        return np.array([np.inf])
+# def psnr_wrapper(im1, im2):
+#     if np.array_equal(im1, im2):
+#         return np.array([np.inf])
     
-    return psnr(im1, im2, data_range=255)
+#     return psnr(im1, im2, data_range=255)
 
 def ssim_wrapper(im1, im2):
     return ssim(im1, im2, data_range=255, channel_axis=2)
@@ -76,9 +76,9 @@ def save_imgs(x, p, transpose=True, resize=True):
 
 def main():
     data = dict()
-    data["d"] = []
+    data["dataset"] = []
     data["ssim"] = []
-    data["psnr"] = []
+    # data["psnr"] = []
     data["mae"] = []
 
     for d in DATASETS:
@@ -126,7 +126,7 @@ def main():
             mug_views.add(result)
         
         avg_ssim_true_vs_false = 0
-        avg_psnr_true_vs_false = 0
+        # avg_psnr_true_vs_false = 0
         avg_mae_true_vs_false = 0
         for view in mug_views:
             # The true reference Image 
@@ -137,28 +137,28 @@ def main():
 
             # True image vs False Image
             avg_ssim_true_vs_false += ssim_wrapper(true_img, false_img)
-            avg_psnr_true_vs_false += psnr_wrapper(true_img, false_img)
+            # avg_psnr_true_vs_false += psnr_wrapper(true_img, false_img)
             avg_mae_true_vs_false += mae(true_img, false_img)
 
         avg_ssim_true_vs_false /= len(mug_views)
-        avg_psnr_true_vs_false /= len(mug_views)
+        # avg_psnr_true_vs_false /= len(mug_views)
         avg_mae_true_vs_false /= len(mug_views)
 
         avg_ssim_true_vs_false = round(avg_ssim_true_vs_false.item(), 3)
-        avg_psnr_true_vs_false = round(avg_psnr_true_vs_false.item(), 3)
+        # avg_psnr_true_vs_false = round(avg_psnr_true_vs_false.item(), 3)
         avg_mae_true_vs_false = round(avg_mae_true_vs_false.item(), 3)
 
-        data["d"].append(d)
+        data["dataset"].append(d)
         data["ssim"].append(avg_ssim_true_vs_false)
-        data["psnr"].append(avg_psnr_true_vs_false)
+        # data["psnr"].append(avg_psnr_true_vs_false)
         data["mae"].append(avg_mae_true_vs_false)
         print("\n" + d + "\n")
         print("SSIM")
         print("Window_size: ", str(WINDOW_SIZE))
         print("Sigma: ", str(SIGMA))
         print("The average ssim score for true vs. false: " + str(avg_ssim_true_vs_false))
-        print("\nPSNR")
-        print("The average psnr score for true vs. false: " + str(avg_psnr_true_vs_false))
+        # print("\nPSNR")
+        # print("The average psnr score for true vs. false: " + str(avg_psnr_true_vs_false))
         print("\nMAE")
         print("The average mae score for true vs. false: " + str(avg_mae_true_vs_false))
 
