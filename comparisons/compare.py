@@ -1,4 +1,4 @@
-# SSIM, PSNR, and MAE Error
+# SSIM and MAE Error
 
 import torch  
 import torch.nn.functional as F 
