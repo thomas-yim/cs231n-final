@@ -10,24 +10,14 @@ from pathlib import Path
 import re
 import os
 from skimage.metrics import structural_similarity as ssim
-from skimage.metrics import peak_signal_noise_ratio as psnr
 from collections import defaultdict
 import sys
 import pandas as pd
 
-# if len(sys.argv) > 1:
-#     DATASET = sys.argv[1]
-# else:
-#     # DATASET = "local_results"
-#     # DATASET = "stacked_depth_full"
-#     # DATASET = "milestone_results"
-#     # DATASET = "milestone_model_train"
-#     DATASET = "new_data_stacked_depth_deep"
-
 DATASETS = []
-DATASETS.append("stacked_depth_full")
-DATASETS.append("milestone_results")
-DATASETS.append("milestone_model_train")
+# DATASETS.append("stacked_depth_full")
+# DATASETS.append("milestone_results")
+# DATASETS.append("milestone_model_train")
 DATASETS.append("new_data_base")
 DATASETS.append("new_data_stacked_depth")
 DATASETS.append("new_data_stacked_depth_skip")
@@ -40,45 +30,33 @@ SIZE = 256
 WINDOW_SIZE = 11 # default for ssim
 SIGMA = 1.5 # default for ssim
 C = 3
-SAVE_IMAGES = False
+NORMALIZE_MAE = False
 
 def load_images(x):
     return np.asarray(Image.open(x).resize((SIZE, SIZE)))
 
-# def psnr_wrapper(im1, im2):
-#     if np.array_equal(im1, im2):
-#         return np.array([np.inf])
-    
-#     return psnr(im1, im2, data_range=255)
-
 def ssim_wrapper(im1, im2):
-    return ssim(im1, im2, data_range=255, channel_axis=2)
+    # expects uint8 input
+    return ssim(im1, im2, channel_axis=2)
 
 def mae(im1, im2):
-    # Calculate the squared difference between the pixel values for each channel
-    abs_diff = np.abs(im1 - im2)
+    # Calculate the squared difference between the pixel values for each channel; scaled btw 0 and 1
+    if NORMALIZE_MAE:
+        scaled_im1 = im1.astype(np.float64) / 255
+        scaled_im2 = im2.astype(np.float64) / 255
+
+        abs_diff = np.abs(scaled_im1 - scaled_im2)
+    
+    else:
+        abs_diff = np.abs(im1.astype(np.float64) - im2.astype(np.float64))
 
     # Calculate the mean of the squared differences across all channels
     return np.mean(abs_diff)
-
-# save imgs 
-def save_imgs(x, p, transpose=True, resize=True):
-    if resize:
-        x=cv2.resize(x, (SIZE, SIZE))
-    if transpose:
-        x_transpose = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
-        norm = cv2.normalize(x_transpose, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        Image.fromarray(norm).save(p)
-    else:
-        norm = np.zeros_like(x)
-        norm = cv2.normalize(x, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        Image.fromarray(norm).save(p)
 
 def main():
     data = dict()
     data["dataset"] = []
     data["ssim"] = []
-    # data["psnr"] = []
     data["mae"] = []
 
     for d in DATASETS:
@@ -126,7 +104,6 @@ def main():
             mug_views.add(result)
         
         avg_ssim_true_vs_false = 0
-        # avg_psnr_true_vs_false = 0
         avg_mae_true_vs_false = 0
         for view in mug_views:
             # The true reference Image 
@@ -137,32 +114,27 @@ def main():
 
             # True image vs False Image
             avg_ssim_true_vs_false += ssim_wrapper(true_img, false_img)
-            # avg_psnr_true_vs_false += psnr_wrapper(true_img, false_img)
             avg_mae_true_vs_false += mae(true_img, false_img)
 
         avg_ssim_true_vs_false /= len(mug_views)
-        # avg_psnr_true_vs_false /= len(mug_views)
         avg_mae_true_vs_false /= len(mug_views)
 
         avg_ssim_true_vs_false = round(avg_ssim_true_vs_false.item(), 3)
-        # avg_psnr_true_vs_false = round(avg_psnr_true_vs_false.item(), 3)
         avg_mae_true_vs_false = round(avg_mae_true_vs_false.item(), 3)
 
         data["dataset"].append(d)
         data["ssim"].append(avg_ssim_true_vs_false)
-        # data["psnr"].append(avg_psnr_true_vs_false)
         data["mae"].append(avg_mae_true_vs_false)
         print("\n" + d + "\n")
         print("SSIM")
         print("Window_size: ", str(WINDOW_SIZE))
         print("Sigma: ", str(SIGMA))
         print("The average ssim score for true vs. false: " + str(avg_ssim_true_vs_false))
-        # print("\nPSNR")
-        # print("The average psnr score for true vs. false: " + str(avg_psnr_true_vs_false))
         print("\nMAE")
         print("The average mae score for true vs. false: " + str(avg_mae_true_vs_false))
 
     df = pd.DataFrame(data)
     df.to_excel("eval_results.xlsx", index=False)
 
-main()
+if __name__ == "__main__":
+    main()
