@@ -86,4 +86,3 @@ model = nn.Sequential(
 )
 model.load_state_dict(torch.load('./best_model.pth'))
 check_accuracy_part34(test_dataloader, model)
-

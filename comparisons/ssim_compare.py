@@ -8,16 +8,34 @@ from PIL import Image
 import cv2
 from pathlib import Path
 import re
+import os
 
-SIZE = 256
+DATASET = "local_results"
+# DATASET = "stacked_depth_full"
+# DATASET = "milestone_results"
+# DATASET = "milestone_model_train"
+
 USER = "Caroline"
 if USER == "Caroline":
-    PATH_TO_RESULTS = "/Users/carolinecahilly/Desktop/results/local_results/ray_pix2pix/test_latest/images/"
-    OUTPUT_FOLDER = "images/"
+    if DATASET == "local_results":
+        PATH_TO_RESULTS = "/Users/carolinecahilly/Desktop/results/local_results/ray_pix2pix/test_latest/images/"
+    
+    elif DATASET == "stacked_depth_full":
+        PATH_TO_RESULTS = "/Users/carolinecahilly/Desktop/results/stacked_depth_full/test_latest/images/"
+    
+    elif DATASET == "milestone_results":
+        PATH_TO_RESULTS = "/Users/carolinecahilly/Desktop/results/milestone_results/full_train_ray/test_latest/images/"
+    
+    elif DATASET == "milestone_model_train":
+        PATH_TO_RESULTS = "/Users/carolinecahilly/Desktop/results/milestone_model_train/test_latest/images/"
 
+    OUTPUT_FOLDER = DATASET + "/"
+
+SIZE = 256
 WINDOW_SIZE = 11
 SIGMA = 1.5
 C = 3
+SAVE_IMAGES = False
 
 def gaussian(window_size=WINDOW_SIZE, sigma=SIGMA):
     """
@@ -108,12 +126,11 @@ def save_imgs(x, p, transpose=True, resize=True):
         x=cv2.resize(x, (SIZE, SIZE))
     if transpose:
         x_transpose = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
-        norm = cv2.normalize(x_transpose, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        Image.fromarray(norm).save(p)
+        # norm = cv2.normalize(x_transpose, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        Image.fromarray(x_transpose).save(p)
     else:
-        norm = np.zeros_like(x_transpose)
-        norm = cv2.normalize(x_transpose, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        Image.fromarray(norm).save(p)
+        # norm = cv2.normalize(x, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        Image.fromarray(x).save(p)
 
 def main():
     # gauss_dis = gaussian()
@@ -146,11 +163,17 @@ def main():
 
         # The noised true image
         noise = np.random.randint(0, 255, (SIZE, SIZE, 3)).astype(np.float32)
-        noisy_img = img1 + noise
+        noisy_img_unnormalized = img1 + noise
+        noisy_img = cv2.normalize(noisy_img_unnormalized, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
-        save_imgs(img1, OUTPUT_FOLDER + view + "true_img.png")
-        save_imgs(img2, OUTPUT_FOLDER + view + "false_img.png")
-        save_imgs(noisy_img, OUTPUT_FOLDER + view + "noised_img.png")
+        if SAVE_IMAGES:
+            images_folder = OUTPUT_FOLDER + "images/"
+            if not os.path.exists(images_folder):
+                os.makedirs(images_folder)
+
+            save_imgs(img1, images_folder + view + "true_img.png")
+            save_imgs(img2, images_folder + view + "false_img.png")
+            save_imgs(noisy_img, images_folder + view + "noised_img.png")
 
         # Check SSIM score of True image vs False Image
         _img1 = tensorify(img1)
@@ -179,11 +202,24 @@ def main():
     avg_true_vs_noised /= len(mug_views)
     avg_true_vs_true /= len(mug_views)
 
+    if not SAVE_IMAGES:
+        if not os.path.exists(OUTPUT_FOLDER):
+            os.makedirs(OUTPUT_FOLDER)
+
+    with open(OUTPUT_FOLDER + "results.txt", "w") as file:
+        # Redirect the output to the file
+        print("Window_size: ", str(WINDOW_SIZE), file=file)
+        print("Sigma: ", str(SIGMA), file=file)
+        print("The average ssim score for true vs. false: " + str(round(avg_true_vs_false.item(), 3)), file=file)
+        print("The average ssim score for true vs. noised: " + str(round(avg_true_vs_noised.item(), 3)), file=file)
+        print("The average ssim score for true vs. true: " + str(round(avg_true_vs_true.item(), 3)), file=file)
+
     print("Window_size: ", str(WINDOW_SIZE))
     print("Sigma: ", str(SIGMA))
-    print("The average ssim score for true vs. false was: " + str(round(avg_true_vs_false.item(), 3)))
-    print("The average ssim score for true vs. noised was: " + str(round(avg_true_vs_noised.item(), 3)))
-    print("The average ssim score for true vs. true was: " + str(round(avg_true_vs_true.item(), 3)))
+    print("The average ssim score for true vs. false: " + str(round(avg_true_vs_false.item(), 3)))
+    print("The average ssim score for true vs. noised: " + str(round(avg_true_vs_noised.item(), 3)))
+    print("The average ssim score for true vs. true: " + str(round(avg_true_vs_true.item(), 3)))
 
+    
 
 main()
