@@ -1,0 +1,16 @@
+SSIM
+Window_size:  11
+Sigma:  1.5
+The average ssim score for true vs. false: 0.937
+The average ssim score for true vs. noised: 0.063
+The average ssim score for true vs. true: 1.0
+
+PSNR
+The average psnr score for true vs. false: 31.249
+The average psnr score for true vs. noised: 12.33
+The average psnr score for true vs. true: inf
+
+MSE
+The average mse score for true vs. false: 12.823
+The average mse score for true vs. noised: 104.583
+The average mse score for true vs. true: 0.0

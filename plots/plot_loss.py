@@ -9,8 +9,16 @@ if len(sys.argv) > 2:
     IN_FILE = sys.argv[1]
     MODEL = sys.argv[2]
 elif USER == "Caroline":
-    IN_FILE = "loss_log_milestone.txt"
-    MODEL = "Milestone"
+    # IN_FILE = "loss_log_milestone.txt"
+    # MODEL = "Milestone"
+    # IN_FILE = "loss_log_depth_stacked.txt"
+    # MODEL = "Depth Stacked"
+    # IN_FILE = "loss_log_depth_norm_7_channel.txt"
+    # MODEL = "Depth Norm 7 Channel"
+    IN_FILE = "loss_log_stacked_depth_deep.txt"
+    MODEL = "Stacked Depth Deep"
+
+    
 
 if USER == "Caroline":
     OUT_PATH = "" # current directory
