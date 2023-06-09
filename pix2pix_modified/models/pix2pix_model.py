@@ -92,7 +92,9 @@ class Pix2PixModel(BaseModel):
         # Fake; stop backprop to the generator by detaching fake_B
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)  # we use conditional GANs; we need to feed both input and output to the discriminator
         pred_fake = self.netD(fake_AB.detach())
+        print(pred_fake.size())
         self.loss_D_fake = self.criterionGAN(pred_fake, False)
+        print(self.loss_D_fake)
         # Real
         real_AB = torch.cat((self.real_A, self.real_B), 1)
         pred_real = self.netD(real_AB)

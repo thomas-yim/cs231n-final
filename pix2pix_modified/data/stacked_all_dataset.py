@@ -6,7 +6,7 @@ import torch
 import random
 
 
-class StackedDataset(BaseDataset):
+class StackedAllDataset(BaseDataset):
     """
     This dataset class can load unaligned/unpaired datasets with stacked channel features (depth and normals)
 
