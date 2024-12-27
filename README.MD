@@ -54,7 +54,7 @@ The Depth + Normal Model outperformed others based on quantitative and qualitati
 
 Inference time demonstrated a **4.5x speedup** over traditional ray tracing, reducing rendering time from 1.68s to **0.37s**.
 
-See Mug Makeover Computer Vision Project.pdf for qualitative results.
+See `docs/Mug Makeover Computer Vision Project.pdf` for qualitative results.
 
 ## Contributions
 This project was developed by the following individuals: Thomas Lee, Daniel Lee, and Caroline Cahilly.
