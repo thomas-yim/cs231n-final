@@ -8,13 +8,11 @@ Mug Makeover is a computer vision project that leverages deep learning technique
 - [Dataset](#dataset)
 - [Methods](#methods)
 - [Results](#results)
-- [Installation](#installation)
-- [Usage](#usage)
 - [Contributions](#contributions)
 - [Acknowledgements](#acknowledgements)
 
 ## Abstract
-Ray tracing produces realistic scenes but is computationally expensive. Our approach uses a conditional generative adversarial network (cGAN)—specifically the pix2pix architecture—to generate ray-traced approximations from rasterized inputs. By incorporating additional features like depth and normal maps, we achieved a 4.5x speedup compared to traditional ray tracing while maintaining visual quality.
+Ray tracing produces realistic scenes but is computationally expensive. Our approach uses a conditional generative adversarial network (cGAN)—specifically the pix2pix architecture—to generate ray-traced approximations from rasterized inputs. By incorporating additional features like depth and normal maps, we achieved a 4.5x speedup compared to traditional ray tracing while producing higher visual quality than rasterized images.
 
 ## Dataset
 Our dataset includes 117 3D mug models rendered from 100 viewpoints each, resulting in 23,400 rasterized and ray-traced image pairs (46,800 total images with depth and normal maps). Data was generated in Blender using the Eevee and Cycles rendering engines.
@@ -44,52 +42,25 @@ We implemented five variations of the pix2pix model:
 
 ## Results
 The Depth + Normal Model outperformed others based on quantitative and qualitative evaluation:
-- Mean L1 Loss: **3.730**
-- CNN Accuracy: **99.65%**
-- MSSIM: **0.934**
+
+| Model                    | Mean L1 | CNN (%) | MSSIM |
+|--------------------------|---------|---------|-------|
+| Ground Truth             | 0       | 100.00  | 1.000 |
+| Base                     | 4.168   | 99.88   | 0.925 |
+| Depth                    | 4.026   | 99.18   | 0.928 |
+| Depth+Skip Connection    | 4.823   | 100.00  | 0.896 |
+| Depth+Normal             | 3.730   | 99.65   | 0.934 |
+| Deeper Depth             | 5.770   | 100.00  | 0.919 |
 
 Inference time demonstrated a **4.5x speedup** over traditional ray tracing, reducing rendering time from 1.68s to **0.37s**.
 
-## Installation
-1. Clone the repository:
-```bash
-$ git clone https://github.com/username/mug-makeover.git
-$ cd mug-makeover
-```
-
-2. Install dependencies:
-```bash
-$ pip install -r requirements.txt
-```
-
-3. Prepare data:
-Download dataset and place it in the `data/` folder.
-
-## Usage
-### Training CNN Classifier:
-```bash
-$ python train_cnn.py --config configs/cnn_config.yaml
-```
-
-### Training pix2pix Model:
-```bash
-$ python train_pix2pix.py --config configs/pix2pix_config.yaml
-```
-
-### Evaluation:
-```bash
-$ python evaluate.py --model_path checkpoints/pix2pix_best.pth
-```
 
 ## Contributions
-This project was developed by:
-- **Caroline Cahilly** - Model evaluation and analysis
-- **Thomas Yim** - Infrastructure and model implementation
-- **Daniel Lee** - CNN classifier design and training
+This project was developed by the following individuals: Thomas Lee, Daniel Lee, and Caroline Cahilly.
 
 ## Acknowledgements
 We thank:
-- Jonathan Tremblay (Nvidia) for dataset design feedback.
+- Jonathan Tremblay (NVIDIA) for dataset design feedback.
 - Jun-Yan Zhu for insights on modifying the pix2pix model.
 - Yuan Gao (TA) for experimental suggestions and feedback.
 
@@ -100,4 +71,3 @@ The project was inspired by Tremblay et al.'s work on large-scale ray-traced dat
 - Tremblay, J. et al. (2022). RTMV: A Ray-Traced Multi-View Synthetic Dataset for Novel View Synthesis.
 
 For further details, see the full report in the `docs/` folder.
-
